@@ -1,12 +1,14 @@
 package com.lambdaschool.shoppingcart.controllers;
 
-import com.lambdaschool.shoppingcart.models.Cart;
-import com.lambdaschool.shoppingcart.models.Product;
-import com.lambdaschool.shoppingcart.models.User;
+import com.lambdaschool.shoppingcart.models.*;
 import com.lambdaschool.shoppingcart.services.CartService;
+import com.lambdaschool.shoppingcart.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,13 +26,19 @@ public class CartController
     @Autowired
     private CartService cartService;
 
+    @Autowired
+    private UserService userService;
+
     @GetMapping(value = "/user", produces = {"application/json"})
-    public ResponseEntity<?> listAllCarts(@PathVariable long userid)
+    public ResponseEntity<?> listAllCarts()
     {
-        List<Cart> myCarts = cartService.findAllByUserId(userid);
+        User me = userService.findUserByName(SecurityContextHolder.getContext().getAuthentication().getName());
+
+        List<Cart> myCarts = cartService.findAllByUserId(me.getUserid());
         return new ResponseEntity<>(myCarts, HttpStatus.OK);
     }
 
+    @PreAuthorize(value = "hasAnyRole('ADMIN')")
     @GetMapping(value = "/cart/{cartId}",
             produces = {"application/json"})
     public ResponseEntity<?> getCartById(
@@ -42,17 +50,15 @@ public class CartController
                                     HttpStatus.OK);
     }
 
-    @PostMapping(value = "/create/user/{userid}/product/{productid}")
-    public ResponseEntity<?> addNewCart(@PathVariable long userid,
-                                        @PathVariable long productid)
+    @PostMapping(value = "/create/product/{productid}")
+    public ResponseEntity<?> addNewCart(@PathVariable long productid)
     {
-        User dataUser = new User();
-        dataUser.setUserid(userid);
+        User me = userService.findUserByName(SecurityContextHolder.getContext().getAuthentication().getName());
 
         Product dataProduct = new Product();
         dataProduct.setProductid(productid);
 
-        cartService.save(dataUser, dataProduct);
+        cartService.save(me, dataProduct);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
@@ -60,13 +66,29 @@ public class CartController
     public ResponseEntity<?> updateCart(@PathVariable long cartid,
                                         @PathVariable long productid)
     {
-        Cart dataCart = new Cart();
-        dataCart.setCartid(cartid);
+        User me = userService.findUserByName(SecurityContextHolder.getContext().getAuthentication().getName());
+
+        Cart cart = cartService.findCartById(cartid);
+
+        if(me != cart.getUser()) {
+            boolean isAdmin = false;
+            for (UserRole ur : me.getRoles()) {
+                if (ur.getRole().getName().equalsIgnoreCase("ADMIN")) {
+                    isAdmin = true;
+                    break;
+                }
+            }
+
+            if(!isAdmin)
+            {
+                throw new AccessDeniedException("You do not have permission to modify this cart.");
+            }
+        }
 
         Product dataProduct = new Product();
         dataProduct.setProductid(productid);
 
-        cartService.save(dataCart, dataProduct);
+        cartService.save(cart, dataProduct);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -74,13 +96,29 @@ public class CartController
     public ResponseEntity<?> deleteFromCart(@PathVariable long cartid,
                                             @PathVariable long productid)
     {
-        Cart dataCart = new Cart();
-        dataCart.setCartid(cartid);
+        User me = userService.findUserByName(SecurityContextHolder.getContext().getAuthentication().getName());
+
+        Cart cart = cartService.findCartById(cartid);
+
+        if(me != cart.getUser()) {
+            boolean isAdmin = false;
+            for (UserRole ur : me.getRoles()) {
+                if (ur.getRole().getName().equalsIgnoreCase("ADMIN")) {
+                    isAdmin = true;
+                    break;
+                }
+            }
+
+            if(!isAdmin)
+            {
+                throw new AccessDeniedException("You do not have permission to modify this cart.");
+            }
+        }
 
         Product dataProduct = new Product();
         dataProduct.setProductid(productid);
 
-        cartService.delete(dataCart, dataProduct);
+        cartService.delete(cart, dataProduct);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }
