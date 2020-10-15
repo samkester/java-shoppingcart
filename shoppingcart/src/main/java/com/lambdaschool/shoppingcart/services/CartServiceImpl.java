@@ -127,4 +127,9 @@ public class CartServiceImpl
             throw new ResourceNotFoundException("Cart id " + updateCart.getCartid() + " Product id " + updateProduct.getProductid() + " combo not found");
         }
     }
+
+    @Override
+    public void deleteAll() {
+        cartrepos.deleteAll();
+    }
 }

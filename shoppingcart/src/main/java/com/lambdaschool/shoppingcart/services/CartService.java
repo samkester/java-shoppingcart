@@ -62,4 +62,6 @@ public interface CartService
      */
     void delete(Cart cart,
                 Product product);
+
+    void deleteAll();
 }

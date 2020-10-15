@@ -63,6 +63,7 @@ public class UserServiceImpl
 
         newUser.setUsername(user.getUsername());
         newUser.setComments(user.getComments());
+        newUser.setPasswordDirect(user.getPassword());
 
         if (user.getCarts()
                 .size() > 0)
@@ -70,5 +71,15 @@ public class UserServiceImpl
             throw new ResourceFoundException("Carts are not added through users");
         }
         return userrepos.save(newUser);
+    }
+
+    @Override
+    public User findUserByName(String username) {
+        return userrepos.findByUsername(username);
+    }
+
+    @Override
+    public void deleteAll() {
+        userrepos.deleteAll();
     }
 }

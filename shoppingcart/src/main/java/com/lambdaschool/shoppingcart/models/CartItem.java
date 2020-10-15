@@ -36,6 +36,14 @@ public class CartItem
 
     }
 
+    public CartItem(Cart cart, Product product, long quantity, String comments)
+    {
+        this.cart = cart;
+        this.product = product;
+        this.quantity = quantity;
+        this.comments = comments;
+    }
+
     public Cart getCart()
     {
         return cart;
