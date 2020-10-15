@@ -119,4 +119,9 @@ public class ProductServiceImpl
                                               currentProduct.getComments());
         return findProductById(id);
     }
+
+    @Override
+    public void deleteAll() {
+        productrepos.deleteAll();
+    }
 }

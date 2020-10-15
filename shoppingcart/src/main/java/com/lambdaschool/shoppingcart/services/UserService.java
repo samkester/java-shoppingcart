@@ -42,4 +42,6 @@ public interface UserService
     User save(User user);
 
     User findUserByName(String username);
+
+    void deleteAll();
 }

@@ -77,4 +77,9 @@ public class UserServiceImpl
     public User findUserByName(String username) {
         return userrepos.findByUsername(username);
     }
+
+    @Override
+    public void deleteAll() {
+        userrepos.deleteAll();
+    }
 }
